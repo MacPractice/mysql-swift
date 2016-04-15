@@ -56,28 +56,17 @@ extension QueryTestType {
 }
 
 
-class QueryTests: XCTestCase, QueryTestType, XCTestCaseProvider {
-    
-    var allTests: [(String, () throws -> Void)] {
-        return self.dynamicType.allTests.map{ ($0.0, $0.1(self)) }
-    }
+class QueryTests: XCTestCase, QueryTestType {
     
     var constants: TestConstantsType!
     var pool: ConnectionPool!
     
-    #if os(OSX)
     override func setUp() {
         super.setUp()
         
         prepare()
         try! createTestTable()
     }
-    #else
-    func setUp() {
-        prepare()
-        try! createTestTable()
-    }
-    #endif
     
     var someDate: SQLDate {
         return try! SQLDate(sqlDate: "2015-12-27 16:54:00", timeZone: pool.options.timeZone)
@@ -87,7 +76,7 @@ class QueryTests: XCTestCase, QueryTestType, XCTestCaseProvider {
         return SQLDate(NSDate(timeIntervalSinceReferenceDate: 60*60*24*67))
     }
     
-    func testInsertRow() {
+    func testInsertRow() throws {
         
         typealias User = Row.UserDecodeWithIndex
         
@@ -95,13 +84,13 @@ class QueryTests: XCTestCase, QueryTestType, XCTestCaseProvider {
         let age = 25
         
         let userNil = User(id: 0, name: name, age: age, createdAt: someDate, nameOptional: nil, ageOptional: nil, createdAtOptional: nil, done: false, doneOptional: nil)
-        let status: QueryStatus = try! pool.execute { conn in
+        let status: QueryStatus = try pool.execute { conn in
             try conn.query("INSERT INTO ?? SET ? ", [constants.tableName, userNil])
         }
         XCTAssertEqual(status.insertedId, 1)
         
         let userFill = User(id: 0, name: name, age: age, createdAt: someDate, nameOptional: "fuga", ageOptional: 50, createdAtOptional: anotherDate, done: true, doneOptional: false)
-        let status2: QueryStatus = try! pool.execute { conn in
+        let status2: QueryStatus = try pool.execute { conn in
             try conn.query("INSERT INTO ?? SET ? ", [constants.tableName, userFill])
         }
         XCTAssertEqual(status2.insertedId, 2)
@@ -150,16 +139,16 @@ class QueryTests: XCTestCase, QueryTestType, XCTestCaseProvider {
         
         
         // fetch inserted rows
-        selectingWithFieldKey()
+        try selectingWithFieldKey()
     }
     
-    func selectingWithFieldKey() {
+    func selectingWithFieldKey() throws {
         
         let name = "name 's"
         let age = 25
         
         typealias User = Row.UserDecodeWithKey
-        let rows:[User] = try! pool.execute { conn in
+        let rows:[User] = try pool.execute { conn in
             try conn.query("SELECT * FROM ?? LIMIT ?", [constants.tableName, 2])
         }
         
@@ -197,17 +186,17 @@ class QueryTests: XCTestCase, QueryTestType, XCTestCaseProvider {
     }
     
     
-    func testEmojiInserting() {
+    func testEmojiInserting() throws {
         
         typealias User = Row.UserDecodeWithIndex
         
         let date = SQLDate.now()
         let user = User(id: 0, name: "日本語123🍣あいう", age: 123, createdAt: date, nameOptional: nil, ageOptional: nil, createdAtOptional: nil, done: false, doneOptional: nil)
-        let status: QueryStatus = try! pool.execute { conn in
+        let status: QueryStatus = try pool.execute { conn in
             try conn.query("INSERT INTO ?? SET ? ", [constants.tableName, user])
         }
         
-        let rows: [User] = try! pool.execute{ conn in
+        let rows: [User] = try pool.execute{ conn in
             try conn.query("SELECT id,name,age,created_at,name_Optional,age_Optional,created_at_Optional,done,done_Optional FROM ?? WHERE id = ?", [constants.tableName, status.insertedId])
         }
         XCTAssertEqual(rows.count, 1)
@@ -218,34 +207,23 @@ class QueryTests: XCTestCase, QueryTestType, XCTestCaseProvider {
     
 }
 
-class BlobQueryTests: XCTestCase, QueryTestType, XCTestCaseProvider {
-    
-    var allTests: [(String, () throws -> Void)] {
-        return self.dynamicType.allTests.map{ ($0.0, $0.1(self)) }
-    }
+class BlobQueryTests: XCTestCase, QueryTestType {
     
     var constants: TestConstantsType!
     var pool: ConnectionPool!
     
-    #if os(OSX)
     override func setUp() {
         super.setUp()
         
         prepare()
         try! createTextBlobTable()
     }
-    #else
-    func setUp() {
-    prepare()
-    try! createTextBlobTable()
-    }
-    #endif
     
-    func testInsertForCombinedUnicodeCharacter() {
+    func testInsertForCombinedUnicodeCharacter() throws {
         let str = "'ﾞ and áäèëî , ¥"
         
         let obj = Row.BlobTextRow(id: 0, text1: str)
-        let status: QueryStatus = try! pool.execute { conn in
+        let status: QueryStatus = try pool.execute { conn in
             try conn.query("INSERT INTO ?? SET ? ", [constants.tableName, obj])
         }
         XCTAssertEqual(status.insertedId, 1)
