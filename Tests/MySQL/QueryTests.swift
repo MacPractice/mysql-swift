@@ -10,6 +10,17 @@ import XCTest
 @testable import MySQL
 import Foundation
 
+extension QueryTests {
+    static var allTests : [(String, QueryTests -> () throws -> Void)] {
+        return [
+                   ("testInsertRow", testInsertRow),
+                   ("testEmojiInserting", testEmojiInserting)
+        ]
+    }
+}
+
+
+
 protocol QueryTestType: MySQLTestType {
     func createTestTable() throws
     func dropTestTable() throws
@@ -36,15 +47,30 @@ extension QueryTestType {
         try conn.query(query)
     }
     
-    func createTextBlobTable() throws {
+    func createBlobTable() throws {
         try dropTestTable()
         
         let conn = try pool.getConnection()
         let query = "CREATE TABLE `\(constants.tableName)` (" +
             "`id` int(11) unsigned NOT NULL AUTO_INCREMENT," +
             "`text1` mediumtext NOT NULL," +
+            "`binary1` mediumblob NOT NULL," +
             "PRIMARY KEY (`id`)" +
         ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+        
+        try conn.query(query)
+    }
+    
+    func createBinaryBlobTable() throws {
+        try dropTestTable()
+        
+        let conn = try pool.getConnection()
+        let query = "CREATE TABLE `\(constants.tableName)` (" +
+            "`id` int(11) unsigned NOT NULL AUTO_INCREMENT," +
+            "`text1` mediumtext NOT NULL," +
+            "`binary1` mediumblob NOT NULL," +
+            "PRIMARY KEY (`id`)" +
+        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;"
         
         try conn.query(query)
     }
@@ -207,27 +233,3 @@ class QueryTests: XCTestCase, QueryTestType {
     
 }
 
-class BlobQueryTests: XCTestCase, QueryTestType {
-    
-    var constants: TestConstantsType!
-    var pool: ConnectionPool!
-    
-    override func setUp() {
-        super.setUp()
-        
-        prepare()
-        try! createTextBlobTable()
-    }
-    
-    func testInsertForCombinedUnicodeCharacter() throws {
-        let str = "'ﾞ and áäèëî , ¥"
-        
-        let obj = Row.BlobTextRow(id: 0, text1: str)
-        let status: QueryStatus = try pool.execute { conn in
-            try conn.query("INSERT INTO ?? SET ? ", [constants.tableName, obj])
-        }
-        XCTAssertEqual(status.insertedId, 1)
-        
-    }
-    
-}
