@@ -68,7 +68,7 @@ final public class ConnectionPool: CustomStringConvertible {
             return nil
         }
         guard let conn = connection else {
-            throw Connection.Error.ConnectionPoolGetConnectionError
+            throw Connection.Error.connectionPoolGetConnectionError
         }
         return conn
     }
@@ -99,7 +99,7 @@ final public class ConnectionPool: CustomStringConvertible {
 
 extension ConnectionPool {
     
-    public func execute<T>(@noescape block: (conn: Connection) throws -> T  ) throws -> T {
+    public func execute<T>( _ block: @noescape(conn: Connection) throws -> T  ) throws -> T {
         let conn = try getConnection()
         defer {
             releaseConnection(conn)

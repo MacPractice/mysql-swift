@@ -8,7 +8,18 @@
 
 import XCTest
 @testable import MySQL
-@testable import SQLFormatter
+import SQLFormatter
+
+extension QueryFormatterTests {
+    static var allTests : [(String, (QueryFormatterTests) -> () throws -> Void)] {
+        return [
+                   ("testBasicFormatting", testBasicFormatting),
+                   ("testPlaceholder", testPlaceholder),
+                    ("testStringUtil", testStringUtil)
+        ]
+    }
+}
+
 
 class QueryFormatterTests: XCTestCase {
     
