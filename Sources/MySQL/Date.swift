@@ -77,8 +77,8 @@ public struct SQLDate {
                 comp.hour = 0
                 comp.minute = 0
                 comp.second = 0
-				comp.timeZone = NSTimeZone.local()
-                let cal = SQLDateCalender.calendar(forTimezone: timeZone)
+				comp.timeZone = TimeZone.local()
+                let cal = SQLDateCalendar.calendar(forTimezone: timeZone)
                 if let date = cal.date(from: comp) {
                     self.timeInterval = date.timeIntervalSince1970
                     return
@@ -99,9 +99,9 @@ public struct SQLDate {
                     comp.hour = hour
                     comp.minute = minute
                     comp.second = second
-					comp.timeZone = NSTimeZone.local()
+					comp.timeZone = TimeZone.local()
 
-				let cal = SQLDateCalender.calendar(forTimezone: timeZone)
+				let cal = SQLDateCalendar.calendar(forTimezone: timeZone)
                     if let date = cal.date(from :comp) {
                         self.timeInterval = date.timeIntervalSince1970
                         return
