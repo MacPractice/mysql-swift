@@ -9,17 +9,16 @@ endif
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
     SWIFTC=xcrun -sdk macosx swiftc
-	BUILDOPTS=-Xlinker -L/usr/local/lib -Xcc -I/usr/local/include/mysql
+	BUILDOPTS=-Xlinker -L/usr/local/lib -Xcc -I/usr/local/include/mysql -Xcc -I/usr/local/include
 endif
 
 all: build
 	
 build:
-	$(SWIFT) build -v $(BUILDOPTS)
+	$(SWIFT) build -v $(BUILDOPTS) -Xswiftc -DSWIFT3_DEV
 	
-test:
+test: build
 	$(SWIFT) test
 	
 clean:
-	$(SWIFT) build -k build
-	$(SWIFT) build -k dist
+	$(SWIFT) build --clean dist

@@ -28,9 +28,12 @@ public struct QueryStatus: CustomStringConvertible {
     }
 }
 
-extension String {
+internal extension String {
     func subString(max: Int) -> String {
-        return self[startIndex..<startIndex.advanced(by: max, limit: endIndex)]
+        guard let r = index(startIndex, offsetBy: max, limitedBy: endIndex) else {
+            return self
+        }
+        return self[startIndex..<r]
     }
 }
 
@@ -49,7 +52,6 @@ extension Connection {
     internal struct Field {
         let name: String
         let type: enum_field_types
-        let isBinary: Bool
         init?(f: MYSQL_FIELD) {
             if f.name == nil {
                 return nil
@@ -59,28 +61,41 @@ extension Connection {
             }
             self.name = fs
             self.type = f.type
-            self.isBinary = f.flags & UInt32(BINARY_FLAG) > 0 ? true : false
         }
-        func cast(value str: String, row: Int, timeZone: TimeZone) throws -> Any {
-            if type == MYSQL_TYPE_DATE ||
+        var isDate: Bool {
+            return type == MYSQL_TYPE_DATE ||
                 type == MYSQL_TYPE_DATETIME ||
                 type == MYSQL_TYPE_TIME ||
                 type == MYSQL_TYPE_TIMESTAMP
-                
-                //type == MYSQL_TYPE_TIME2 ||
-                //type == MYSQL_TYPE_DATETIME2 ||
-                //type == MYSQL_TYPE_TIMESTAMP2
-                
-            {
-                return try SQLDate(sqlDate: str, timeZone: timeZone)
+        }
+        
+    }
+    
+    enum FieldValue {
+        case Null
+        case Binary(SQLBinary) // Note: bytes includes utf8 terminating character(0) at end
+        case Date(SQLDate)
+        
+        static func makeBinary(ptr: UnsafeMutablePointer<Int8>, length: UInt) -> FieldValue {
+            var bytes = Array<Int8>.init(repeating: 0, count: Int(length+1))
+            for i in 0..<Int(length) {
+                bytes[i] = ptr[i]
             }
-            if isBinary && (
-                type == MYSQL_TYPE_BLOB ||
-                    type == MYSQL_TYPE_BIT
-                ) {
-                throw QueryError.ResultParseError(message: "blob type is not supported at row:\(row)", result: str)
+            return FieldValue.Binary( SQLBinary(buffer: bytes, length: Int(length)) )
+        }
+        
+        func string() throws -> String {
+            switch self {
+            case .Null:
+                fatalError() // TODO
+            case .Date:
+                fatalError() // TODO
+            case .Binary(let binary):
+                guard let string = String(validatingUTF8: binary.buffer) else {
+                    throw QueryError.resultParseError(message: "invalid utf8 string bytes.", result: "")
+                }
+                return string
             }
-            return str
         }
     }
     
@@ -95,7 +110,7 @@ extension Connection {
         }
         
         guard mysql_real_query(mysql, formattedQuery, UInt(formattedQuery.utf8.count)) == 0 else {
-            throw QueryError.QueryExecutionError(message: MySQLUtil.getMySQLError(mysql), query: queryPrefix())
+            throw QueryError.queryExecutionError(message: MySQLUtil.getMySQLError(mysql), query: queryPrefix())
         }
         let status = QueryStatus(mysql: mysql)
         
@@ -105,7 +120,7 @@ extension Connection {
                 // actual no result
                 return ([], status)
             }
-            throw QueryError.ResultFetchError(message: MySQLUtil.getMySQLError(mysql), query: queryPrefix())
+            throw QueryError.resultFetchError(message: MySQLUtil.getMySQLError(mysql), query: queryPrefix())
         }
         defer {
             mysql_free_result(res)
@@ -113,18 +128,17 @@ extension Connection {
         
         let fieldCount = Int(mysql_num_fields(res))
         guard fieldCount > 0 else {
-            throw QueryError.ResultNoField(query: queryPrefix())
+            throw QueryError.resultNoField(query: queryPrefix())
         }
         
         // fetch field info
-        let fieldDef = mysql_fetch_fields(res)
-        guard fieldDef != nil else {
-            throw QueryError.ResultFieldFetchError(query: queryPrefix())
+        guard let fieldDef = mysql_fetch_fields(res) else {
+            throw QueryError.resultFieldFetchError(query: queryPrefix())
         }
         var fields:[Field] = []
         for i in 0..<fieldCount {
             guard let f = Field(f: fieldDef[i]) else {
-                throw QueryError.ResultFieldFetchError(query: queryPrefix())
+                throw QueryError.resultFieldFetchError(query: queryPrefix())
             }
             fields.append(f)
         }
@@ -134,28 +148,32 @@ extension Connection {
         
         var rowCount: Int = 0
         while true {
-            let row = mysql_fetch_row(res)
-            if row == nil {
-                break
+            guard let row = mysql_fetch_row(res) else {
+                break // end of rows
             }
-            var cols:[Any] = []
+            
+            guard let lengths = mysql_fetch_lengths(res) else {
+                throw QueryError.resultRowFetchError(query: queryPrefix())
+            }
+            
+            var cols:[FieldValue] = []
             for i in 0..<fieldCount {
-                let sf = row[i]
-                let f = fields[i]
-                if sf == nil {
-                    cols.append(NullValue.null)
-                } else {
-                    if let sfPtr = sf, let str = String(validatingUTF8: sfPtr) {
-                        cols.append(try f.cast(value: str, row: rowCount, timeZone: options.timeZone))
+                let field = fields[i]
+                if let valf = row[i] where row[i] != nil {
+                    let binary = FieldValue.makeBinary(ptr: valf, length: lengths[i])
+                    if field.isDate {
+                        cols.append(FieldValue.Date(try SQLDate(sqlDate: binary.string(), timeZone: options.timeZone)))
                     } else {
-                        throw QueryError.ResultParseError(message: "in \(f.name), at row: \(rowCount)", result: "")
-                    }
+                        cols.append(binary)
+                    }                    
+                } else {
+                    cols.append(FieldValue.Null)
                 }
                 
             }
             rowCount += 1
             if fields.count != cols.count {
-                throw QueryError.ResultParseError(message: "invalid fetched column count", result: "")
+                throw QueryError.resultParseError(message: "invalid fetched column count", result: "")
             }
             rows.append(QueryRowResult(fields: fields, cols: cols))
         }

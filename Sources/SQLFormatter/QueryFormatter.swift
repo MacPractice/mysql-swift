@@ -8,17 +8,6 @@
 
 import Foundation
 
-
-#if os(OSX)
-#else
-    extension String {
-        public func range(of string: String, options mask: NSStringCompareOptions, range searchRange: Range<Index>?, locale: NSLocale?) -> Range<Index>? {
-            return rangeOfString(string, options: mask, range: searchRange, locale: locale)
-        }
-    }
-    
-#endif
-
 public protocol QueryParameterType {
     func escaped() -> String
 }
@@ -95,7 +84,7 @@ public struct QueryFormatter {
             let r2 = formatted.range(of: "?", options: [], range: scanRange, locale: nil)
             let r: Range<String.Index>
             if let r1 = r1, let r2 = r2 {
-                r = r1.startIndex <= r2.startIndex ? r1 : r2
+                r = r1.lowerBound <= r2.lowerBound ? r1 : r2
             } else if let rr = r1 ?? r2 {
                 r = rr
             } else {
@@ -105,19 +94,19 @@ public struct QueryFormatter {
             switch formatted[r] {
             case "??":
                 if placeHolderCount >= args.count {
-                    throw QueryFormatError.QueryParameterCountMismatch(query: query)
+                    throw QueryFormatError.queryParameterCountMismatch(query: query)
                 }
                 guard let val = args[placeHolderCount] as? String else {
-                    throw QueryFormatError.QueryParameterIdTypeError(query: query)
+                    throw QueryFormatError.queryParameterIdTypeError(query: query)
                 }
                 formatted.replaceSubrange(r, with: SQLString.escapeId(string: val))
-                scanRange = r.endIndex..<formatted.endIndex
+                scanRange = r.upperBound..<formatted.endIndex
             case "?":
                 if placeHolderCount >= args.count {
-                    throw QueryFormatError.QueryParameterCountMismatch(query: query)
+                    throw QueryFormatError.queryParameterCountMismatch(query: query)
                 }
                 valArgs.append(args[placeHolderCount])
-                scanRange = r.endIndex..<formatted.endIndex
+                scanRange = r.upperBound..<formatted.endIndex
             default: break
             }
             
@@ -136,7 +125,7 @@ public struct QueryFormatter {
         while index < formattedChars.count {
             if formattedChars[index] == "?" {
                 if placeHolderCount >= valArgs.count {
-                    throw QueryFormatError.QueryParameterCountMismatch(query: query)
+                    throw QueryFormatError.queryParameterCountMismatch(query: query)
                 }
                 let val = valArgs[placeHolderCount]
                 formattedChars.remove(at: index)

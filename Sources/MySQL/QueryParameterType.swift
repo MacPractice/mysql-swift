@@ -89,7 +89,7 @@ extension Optional: QueryParameter {
             return QueryParameterNull().queryParameter(option: option)
         }
         guard let val = value as? QueryParameter else {
-            throw QueryFormatError.CastError(actual: "\(value.self)", expected: "QueryParameter", key: "")
+            throw QueryFormatError.castError(actual: "\(value.self)", expected: "QueryParameter", key: "")
         }
         return try val.queryParameter(option: option)
     }
@@ -138,6 +138,12 @@ extension Int: QueryParameter {
 }
 
 extension Int64: QueryParameter {
+    public func queryParameter(option: QueryParameterOption) -> QueryParameterType {
+        return QueryParameterWrap( String(self) )
+    }
+}
+
+extension UInt: QueryParameter {
     public func queryParameter(option: QueryParameterOption) -> QueryParameterType {
         return QueryParameterWrap( String(self) )
     }

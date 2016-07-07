@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "9999"
+   LastUpgradeVersion = "0800"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_MySQL"
-               BuildableName = "libMySQL.dylib"
-               BlueprintName = "MySQL"
-               ReferencedContainer = "container:MySQL.xcodeproj">
+               BlueprintIdentifier = "529828771CB3E258001FE958"
+               BuildableName = "SQLFormatter.framework"
+               BlueprintName = "SQLFormatter"
+               ReferencedContainer = "container:SQLFormatter.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,13 +32,22 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_MySQLTestSuite"
-               BuildableName = "MySQL.testsuite.xctest"
-               BlueprintName = "MySQL.testsuite"
-               ReferencedContainer = "container:MySQL.xcodeproj">
+               BlueprintIdentifier = "529828811CB3E258001FE958"
+               BuildableName = "SQLFormatterTests.xctest"
+               BlueprintName = "SQLFormatterTests"
+               ReferencedContainer = "container:SQLFormatter.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "529828771CB3E258001FE958"
+            BuildableName = "SQLFormatter.framework"
+            BlueprintName = "SQLFormatter"
+            ReferencedContainer = "container:SQLFormatter.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
@@ -55,10 +64,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "______Target_MySQL"
-            BuildableName = "libMySQL.dylib"
-            BlueprintName = "MySQL"
-            ReferencedContainer = "container:MySQL.xcodeproj">
+            BlueprintIdentifier = "529828771CB3E258001FE958"
+            BuildableName = "SQLFormatter.framework"
+            BlueprintName = "SQLFormatter"
+            ReferencedContainer = "container:SQLFormatter.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -70,6 +79,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "529828771CB3E258001FE958"
+            BuildableName = "SQLFormatter.framework"
+            BlueprintName = "SQLFormatter"
+            ReferencedContainer = "container:SQLFormatter.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
