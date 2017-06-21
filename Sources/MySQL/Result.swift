@@ -43,7 +43,7 @@ public protocol SQLStringDecodable {
 
 public struct QueryRowResult {
     
-    let fields: [Connection.Field]
+    public let fields: [Connection.Field]
     let cols: [Connection.FieldValue]
     let columnMap: [String: Connection.FieldValue] // the key is field name
     
