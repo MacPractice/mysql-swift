@@ -7,7 +7,7 @@ let package = Package(
         Target(name: "MySQL", dependencies: ["SQLFormatter"])
     ],
     dependencies: [
-		.Package(url: "git@github.com:MacPractice/CMySQL.git", majorVersion: 0),
+		.Package(url: "https://github.com/MacPractice/CMySQL.git", majorVersion: 0),
 		],
     exclude: [
         "Xcode"
