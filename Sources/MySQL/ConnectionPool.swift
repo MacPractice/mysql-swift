@@ -67,7 +67,7 @@ final public class ConnectionPool: CustomStringConvertible {
     
     public var timeoutForGetConnection: Int = 60
     
-    internal func getConnection() throws -> Connection {
+    public func getConnection() throws -> Connection {
         var connection: Connection? =
         mutex.sync {
             if let conn = getUsableConnection() {
@@ -104,7 +104,7 @@ final public class ConnectionPool: CustomStringConvertible {
         return conn
     }
     
-    internal func releaseConnection(_ conn: Connection) {
+    public func releaseConnection(_ conn: Connection) {
         mutex.sync {
             conn.isInUse = false
             //poolSemaphore.signal()
